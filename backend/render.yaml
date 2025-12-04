@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: nakama-backend
+    env: docker
+    dockerfilePath: ./Dockerfile.render
+    dockerContext: .
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: 7350

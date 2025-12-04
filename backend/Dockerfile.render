@@ -54,7 +54,11 @@ EOF
 
 RUN chmod +x /start.sh
 
-# Expose Nakama ports
-EXPOSE 7349 7350 7351
+# Expose Nakama HTTP port (Render will map this to 443)
+EXPOSE 7350
+
+# Add healthcheck
+HEALTHCHECK --interval=10s --timeout=5s --start-period=60s --retries=3 \
+  CMD ["/nakama/nakama", "healthcheck"]
 
 ENTRYPOINT ["/start.sh"]
