@@ -14,18 +14,11 @@ class Nakama {
     async authenticate() {
         console.log("Starting guest authentication...");
         try {
-            const { host, port, key, useSSL } = nakamaConfig;
+            const { host, port, key } = nakamaConfig;
 
-            // When using SSL, use "443" as string, otherwise use configured port
-            const clientPort = useSSL ? "443" : port;
-
-            this.client = new Client(key, host, clientPort);
-            this.client.ssl = useSSL;
-            console.log(
-                `Nakama client created - ${
-                    useSSL ? "https" : "http"
-                }://${host}${useSSL ? "" : ":" + port}`
-            );
+            this.client = new Client(key, host, port);
+            this.client.ssl = false;
+            console.log(`Nakama client created - http://${host}:${port}`);
 
             // Use sessionStorage instead of localStorage to create unique users per tab/window
             let deviceId = sessionStorage.getItem("deviceId");
@@ -60,13 +53,10 @@ class Nakama {
     async authenticateEmail(email, password, username = null) {
         console.log("Authenticating email:", email, "username:", username);
 
-        const { host, port, key, useSSL } = nakamaConfig;
+        const { host, port, key } = nakamaConfig;
 
-        // When using SSL, use "443" as string, otherwise use configured port
-        const clientPort = useSSL ? "443" : port;
-
-        this.client = new Client(key, host, clientPort);
-        this.client.ssl = useSSL;
+        this.client = new Client(key, host, port);
+        this.client.ssl = false;
 
         try {
             if (username) {

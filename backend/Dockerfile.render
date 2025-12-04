@@ -57,8 +57,8 @@ RUN chmod +x /start.sh
 # Expose Nakama HTTP port (Render will map this to 443)
 EXPOSE 7350
 
-# Add healthcheck
-HEALTHCHECK --interval=10s --timeout=5s --start-period=60s --retries=3 \
+# Add healthcheck with longer grace period for PostgreSQL startup
+HEALTHCHECK --interval=15s --timeout=10s --start-period=120s --retries=5 \
   CMD ["/nakama/nakama", "healthcheck"]
 
 ENTRYPOINT ["/start.sh"]
