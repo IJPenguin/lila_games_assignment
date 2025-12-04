@@ -1,0 +1,23 @@
+FROM heroiclabs/nakama:3.26.0
+
+USER root
+
+# Install SQLite (much simpler than PostgreSQL)
+RUN apt-get update && \
+    apt-get install -y sqlite3 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create data directory
+RUN mkdir -p /nakama/data
+
+# Copy your compiled code and config
+COPY build/*.js /nakama/data/modules/build/
+COPY local.yml /nakama/data/
+COPY model /models/ttt
+
+# Expose Nakama ports
+EXPOSE 7349 7350 7351
+
+# Start Nakama with SQLite (no separate database needed)
+CMD ["/nakama/nakama", "--config", "/nakama/data/local.yml", "--database.address", "root@nakama.db"]
