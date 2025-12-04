@@ -13,9 +13,14 @@ class Nakama {
     async authenticate() {
         console.log("Starting guest authentication...");
         try {
-            this.client = new Client("defaultkey", "localhost", "7350");
-            this.client.ssl = false;
-            console.log("Nakama client created");
+            const host = import.meta.env.VITE_NAKAMA_HOST || "localhost";
+            const port = import.meta.env.VITE_NAKAMA_PORT || "7350";
+            const key = import.meta.env.VITE_NAKAMA_KEY || "defaultkey";
+            const useSSL = import.meta.env.VITE_NAKAMA_USE_SSL === "true";
+            
+            this.client = new Client(key, host, port);
+            this.client.ssl = useSSL;
+            console.log(`Nakama client created - ${useSSL ? 'https' : 'http'}://${host}:${port}`);
 
             // Use sessionStorage instead of localStorage to create unique users per tab/window
             let deviceId = sessionStorage.getItem("deviceId");
@@ -50,8 +55,13 @@ class Nakama {
     async authenticateEmail(email, password, username = null) {
         console.log("Authenticating email:", email, "username:", username);
 
-        this.client = new Client("defaultkey", "localhost", "7350");
-        this.client.ssl = false;
+        const host = import.meta.env.VITE_NAKAMA_HOST || "localhost";
+        const port = import.meta.env.VITE_NAKAMA_PORT || "7350";
+        const key = import.meta.env.VITE_NAKAMA_KEY || "defaultkey";
+        const useSSL = import.meta.env.VITE_NAKAMA_USE_SSL === "true";
+        
+        this.client = new Client(key, host, port);
+        this.client.ssl = useSSL;
 
         try {
             if (username) {
