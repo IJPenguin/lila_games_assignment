@@ -1,0 +1,59 @@
+FROM heroiclabs/nakama:3.26.0
+
+USER root
+
+# Install PostgreSQL and required tools
+RUN apk add --no-cache postgresql postgresql-contrib curl
+
+# Copy your compiled code and config
+COPY build/*.js /nakama/data/modules/build/
+COPY local.yml /nakama/data/
+COPY model /models/ttt
+
+# Create startup script that runs both PostgreSQL and Nakama
+RUN cat > /start.sh <<'EOF'
+#!/bin/sh
+set -e
+
+echo "Starting PostgreSQL..."
+# Initialize PostgreSQL data directory
+mkdir -p /var/lib/postgresql/data
+chown -R postgres:postgres /var/lib/postgresql
+
+# Initialize database
+su postgres -c "initdb -D /var/lib/postgresql/data"
+
+# Start PostgreSQL
+su postgres -c "pg_ctl -D /var/lib/postgresql/data -l /tmp/postgresql.log start"
+
+# Wait for PostgreSQL to be ready
+echo "Waiting for PostgreSQL to start..."
+for i in 1 2 3 4 5 6 7 8 9 10; do
+    if su postgres -c "pg_isready" > /dev/null 2>&1; then
+        echo "PostgreSQL is ready!"
+        break
+    fi
+    echo "Waiting... ($i/10)"
+    sleep 2
+done
+
+# Create database and user
+echo "Setting up database..."
+su postgres -c "psql -c \"CREATE DATABASE nakama;\""
+su postgres -c "psql -c \"ALTER USER postgres WITH PASSWORD 'localdb';\""
+
+# Run Nakama migrations
+echo "Running Nakama migrations..."
+/nakama/nakama migrate up --database.address postgres:localdb@localhost:5432/nakama?sslmode=disable
+
+# Start Nakama
+echo "Starting Nakama..."
+exec /nakama/nakama --config /nakama/data/local.yml --database.address postgres:localdb@localhost:5432/nakama?sslmode=disable
+EOF
+
+RUN chmod +x /start.sh
+
+# Expose Nakama ports
+EXPOSE 7349 7350 7351
+
+CMD ["/start.sh"]

@@ -161,32 +161,6 @@ var OpCode;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// ============================================================================
-// STATE ISOLATION VERIFICATION (Requirements 4.1, 4.2, 4.3, 4.4, 4.5)
-// ============================================================================
-// This match handler ensures complete isolation between concurrent match instances:
-//
-// 1. NO GLOBAL MUTABLE STATE: All module-level constants are immutable (const).
-//    - moduleName, tickRate, maxEmptySec, etc. are read-only configuration
-//    - winningPositions is a constant array that is never modified
-//
-// 2. STATE PARAMETER ISOLATION: Each match handler function receives its own
-//    independent State object via the state parameter. Functions only access
-//    and modify this parameter, never global or shared mutable state.
-//
-// 3. INDEPENDENT STATE INITIALIZATION: matchInit creates a fresh State object
-//    for each match instance with no shared references between matches.
-//
-// 4. SYNCHRONOUS LABEL UPDATES: Match label updates via dispatcher.matchLabelUpdate()
-//    are called synchronously when player count changes, ensuring matchmaking
-//    queries always see accurate match availability.
-//
-// 5. INDEPENDENT TICK LOOPS: Each match instance has its own tick loop managed
-//    by Nakama, with state isolated per instance.
-//
-// All match handler functions are annotated with STATE ISOLATION comments to
-// document that they only access the state parameter for their specific match.
-// ============================================================================
 var moduleName = "tic-tac-toe_js";
 var tickRate = 5;
 var maxEmptySec = 30;
