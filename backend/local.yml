@@ -9,3 +9,6 @@ session:
 socket:
   max_message_size_bytes: 4096 # reserved buffer
   max_request_size_bytes: 131072
+  # Allow connections from any origin (needed for Vercel frontend)
+  allowed_origins:
+    - "*"
