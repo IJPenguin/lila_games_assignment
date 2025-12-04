@@ -1,0 +1,19 @@
+{
+    "files": [
+        "./ai.ts",
+        "./main.ts",
+        "./messages.ts",
+        "./match_handler.ts",
+        "./match_rpc.ts",
+        "./profile.ts",
+        "./node_modules/nakama-runtime/index.d.ts"
+    ],
+    "compilerOptions": {
+        "target": "es5",
+        "outFile": "./build/index.js",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true
+    }
+}
