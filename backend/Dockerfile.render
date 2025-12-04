@@ -1,13 +1,60 @@
 FROM heroiclabs/nakama:3.26.0
 
+USER root
+
+# Install PostgreSQL
+RUN apt-get update && \
+    apt-get install -y postgresql postgresql-contrib && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy your compiled code and config
 COPY build/*.js /nakama/data/modules/build/
 COPY local.yml /nakama/data/
 COPY model /models/ttt
 
+# Create startup script that runs PostgreSQL and Nakama
+RUN cat > /start.sh <<'EOF'
+#!/bin/bash
+set -e
+
+echo "Initializing PostgreSQL..."
+mkdir -p /var/lib/postgresql/data /var/run/postgresql
+chown -R postgres:postgres /var/lib/postgresql /var/run/postgresql
+
+# Initialize database
+su - postgres -c "/usr/lib/postgresql/*/bin/initdb -D /var/lib/postgresql/data"
+
+# Start PostgreSQL
+su - postgres -c "/usr/lib/postgresql/*/bin/pg_ctl -D /var/lib/postgresql/data -l /tmp/postgresql.log start"
+
+# Wait for PostgreSQL
+echo "Waiting for PostgreSQL..."
+for i in {1..30}; do
+    if su - postgres -c "/usr/lib/postgresql/*/bin/pg_isready" > /dev/null 2>&1; then
+        echo "PostgreSQL is ready!"
+        break
+    fi
+    sleep 1
+done
+
+# Create database
+echo "Creating database..."
+su - postgres -c "psql -c \"CREATE DATABASE nakama;\""
+su - postgres -c "psql -c \"ALTER USER postgres WITH PASSWORD 'localdb';\""
+
+# Run migrations
+echo "Running Nakama migrations..."
+/nakama/nakama migrate up --database.address "postgres:localdb@localhost:5432/nakama?sslmode=disable"
+
+# Start Nakama
+echo "Starting Nakama..."
+exec /nakama/nakama --config /nakama/data/local.yml --database.address "postgres:localdb@localhost:5432/nakama?sslmode=disable"
+EOF
+
+RUN chmod +x /start.sh
+
 # Expose Nakama ports
 EXPOSE 7349 7350 7351
 
-# Database address will come from environment variable DATABASE_URL
-# Render will provide this when you connect a PostgreSQL database
-CMD ["/bin/sh", "-c", "/nakama/nakama migrate up --database.address \"${DATABASE_URL}\" && /nakama/nakama --config /nakama/data/local.yml --database.address \"${DATABASE_URL}\""]
+ENTRYPOINT ["/start.sh"]
