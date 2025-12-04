@@ -1,30 +1,13 @@
 FROM heroiclabs/nakama:3.26.0
 
-USER root
-
-# Install SQLite (simpler and more reliable than PostgreSQL for Render)
-RUN apt-get update && \
-    apt-get install -y sqlite3 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Create data directory for SQLite database
-RUN mkdir -p /nakama/data
-
 # Copy your compiled code and config
 COPY build/*.js /nakama/data/modules/build/
 COPY local.yml /nakama/data/
 COPY model /models/ttt
 
-# Create startup script
-RUN echo '#!/bin/bash\n\
-set -e\n\
-echo "Starting Nakama with SQLite..."\n\
-exec /nakama/nakama --config /nakama/data/local.yml --database.address root@nakama.db\n\
-' > /start.sh && chmod +x /start.sh
-
 # Expose Nakama ports
 EXPOSE 7349 7350 7351
 
-# Use startup script
-ENTRYPOINT ["/start.sh"]
+# Database address will come from environment variable DATABASE_URL
+# Render will provide this when you connect a PostgreSQL database
+CMD ["/bin/sh", "-c", "/nakama/nakama migrate up --database.address \"${DATABASE_URL}\" && /nakama/nakama --config /nakama/data/local.yml --database.address \"${DATABASE_URL}\""]
