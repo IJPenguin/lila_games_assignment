@@ -2,62 +2,22 @@ FROM heroiclabs/nakama:3.26.0
 
 USER root
 
-# Install PostgreSQL and required tools (Debian-based)
+# Install SQLite (simpler and more reliable than PostgreSQL for Render)
 RUN apt-get update && \
-    apt-get install -y postgresql postgresql-contrib curl sudo && \
+    apt-get install -y sqlite3 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# Create data directory for SQLite database
+RUN mkdir -p /nakama/data
 
 # Copy your compiled code and config
 COPY build/*.js /nakama/data/modules/build/
 COPY local.yml /nakama/data/
 COPY model /models/ttt
 
-# Create startup script that runs both PostgreSQL and Nakama
-RUN cat > /start.sh <<'EOF'
-#!/bin/bash
-set -e
-
-echo "Starting PostgreSQL..."
-
-# Initialize PostgreSQL data directory
-mkdir -p /var/lib/postgresql/data
-chown -R postgres:postgres /var/lib/postgresql /var/run/postgresql
-
-# Initialize database cluster
-su - postgres -c "/usr/lib/postgresql/*/bin/initdb -D /var/lib/postgresql/data"
-
-# Start PostgreSQL
-su - postgres -c "/usr/lib/postgresql/*/bin/pg_ctl -D /var/lib/postgresql/data -l /tmp/postgresql.log start"
-
-# Wait for PostgreSQL to be ready
-echo "Waiting for PostgreSQL to start..."
-for i in {1..15}; do
-    if su - postgres -c "/usr/lib/postgresql/*/bin/pg_isready" > /dev/null 2>&1; then
-        echo "PostgreSQL is ready!"
-        break
-    fi
-    echo "Waiting... ($i/15)"
-    sleep 2
-done
-
-# Create database and user
-echo "Setting up database..."
-su - postgres -c "psql -c \"CREATE DATABASE nakama;\""
-su - postgres -c "psql -c \"ALTER USER postgres WITH PASSWORD 'localdb';\""
-
-# Run Nakama migrations
-echo "Running Nakama migrations..."
-/nakama/nakama migrate up --database.address postgres:localdb@localhost:5432/nakama?sslmode=disable
-
-# Start Nakama
-echo "Starting Nakama..."
-exec /nakama/nakama --config /nakama/data/local.yml --database.address postgres:localdb@localhost:5432/nakama?sslmode=disable
-EOF
-
-RUN chmod +x /start.sh
-
 # Expose Nakama ports
 EXPOSE 7349 7350 7351
 
-CMD ["/start.sh"]
+# Start Nakama with SQLite database (no separate database server needed)
+CMD ["/nakama/nakama", "--config", "/nakama/data/local.yml", "--database.address", "root@nakama.db"]
