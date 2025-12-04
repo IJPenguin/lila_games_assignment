@@ -2,8 +2,11 @@ FROM heroiclabs/nakama:3.26.0
 
 USER root
 
-# Install PostgreSQL and required tools
-RUN apk add --no-cache postgresql postgresql-contrib curl
+# Install PostgreSQL and required tools (Debian-based)
+RUN apt-get update && \
+    apt-get install -y postgresql postgresql-contrib curl sudo && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy your compiled code and config
 COPY build/*.js /nakama/data/modules/build/
@@ -12,35 +15,36 @@ COPY model /models/ttt
 
 # Create startup script that runs both PostgreSQL and Nakama
 RUN cat > /start.sh <<'EOF'
-#!/bin/sh
+#!/bin/bash
 set -e
 
 echo "Starting PostgreSQL..."
+
 # Initialize PostgreSQL data directory
 mkdir -p /var/lib/postgresql/data
-chown -R postgres:postgres /var/lib/postgresql
+chown -R postgres:postgres /var/lib/postgresql /var/run/postgresql
 
-# Initialize database
-su postgres -c "initdb -D /var/lib/postgresql/data"
+# Initialize database cluster
+su - postgres -c "/usr/lib/postgresql/*/bin/initdb -D /var/lib/postgresql/data"
 
 # Start PostgreSQL
-su postgres -c "pg_ctl -D /var/lib/postgresql/data -l /tmp/postgresql.log start"
+su - postgres -c "/usr/lib/postgresql/*/bin/pg_ctl -D /var/lib/postgresql/data -l /tmp/postgresql.log start"
 
 # Wait for PostgreSQL to be ready
 echo "Waiting for PostgreSQL to start..."
-for i in 1 2 3 4 5 6 7 8 9 10; do
-    if su postgres -c "pg_isready" > /dev/null 2>&1; then
+for i in {1..15}; do
+    if su - postgres -c "/usr/lib/postgresql/*/bin/pg_isready" > /dev/null 2>&1; then
         echo "PostgreSQL is ready!"
         break
     fi
-    echo "Waiting... ($i/10)"
+    echo "Waiting... ($i/15)"
     sleep 2
 done
 
 # Create database and user
 echo "Setting up database..."
-su postgres -c "psql -c \"CREATE DATABASE nakama;\""
-su postgres -c "psql -c \"ALTER USER postgres WITH PASSWORD 'localdb';\""
+su - postgres -c "psql -c \"CREATE DATABASE nakama;\""
+su - postgres -c "psql -c \"ALTER USER postgres WITH PASSWORD 'localdb';\""
 
 # Run Nakama migrations
 echo "Running Nakama migrations..."
