@@ -1,5 +1,6 @@
 import { Client } from "@heroiclabs/nakama-js";
 import { v4 as uuidv4 } from "uuid";
+import nakamaConfig from "./config";
 
 class Nakama {
     constructor() {
@@ -13,14 +14,18 @@ class Nakama {
     async authenticate() {
         console.log("Starting guest authentication...");
         try {
-            const host = import.meta.env.VITE_NAKAMA_HOST || "localhost";
-            const port = import.meta.env.VITE_NAKAMA_PORT || "7350";
-            const key = import.meta.env.VITE_NAKAMA_KEY || "defaultkey";
-            const useSSL = import.meta.env.VITE_NAKAMA_USE_SSL === "true";
-            
-            this.client = new Client(key, host, port);
+            const { host, port, key, useSSL } = nakamaConfig;
+
+            // When using SSL, use "443" as string, otherwise use configured port
+            const clientPort = useSSL ? "443" : port;
+
+            this.client = new Client(key, host, clientPort);
             this.client.ssl = useSSL;
-            console.log(`Nakama client created - ${useSSL ? 'https' : 'http'}://${host}:${port}`);
+            console.log(
+                `Nakama client created - ${
+                    useSSL ? "https" : "http"
+                }://${host}${useSSL ? "" : ":" + port}`
+            );
 
             // Use sessionStorage instead of localStorage to create unique users per tab/window
             let deviceId = sessionStorage.getItem("deviceId");
@@ -55,12 +60,12 @@ class Nakama {
     async authenticateEmail(email, password, username = null) {
         console.log("Authenticating email:", email, "username:", username);
 
-        const host = import.meta.env.VITE_NAKAMA_HOST || "localhost";
-        const port = import.meta.env.VITE_NAKAMA_PORT || "7350";
-        const key = import.meta.env.VITE_NAKAMA_KEY || "defaultkey";
-        const useSSL = import.meta.env.VITE_NAKAMA_USE_SSL === "true";
-        
-        this.client = new Client(key, host, port);
+        const { host, port, key, useSSL } = nakamaConfig;
+
+        // When using SSL, use "443" as string, otherwise use configured port
+        const clientPort = useSSL ? "443" : port;
+
+        this.client = new Client(key, host, clientPort);
         this.client.ssl = useSSL;
 
         try {
