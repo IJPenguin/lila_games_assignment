@@ -12,7 +12,7 @@ class Nakama {
     }
 
     async authenticate() {
-        console.log("Starting guest authentication...");
+        
         try {
             const { host, port, key, useSSL } = nakamaConfig;
 
