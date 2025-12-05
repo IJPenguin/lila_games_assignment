@@ -14,11 +14,15 @@ class Nakama {
     async authenticate() {
         console.log("Starting guest authentication...");
         try {
-            const { host, port, key } = nakamaConfig;
+            const { host, port, key, useSSL } = nakamaConfig;
 
             this.client = new Client(key, host, port);
-            this.client.ssl = false;
-            console.log(`Nakama client created - http://${host}:${port}`);
+            this.client.ssl = useSSL;
+            console.log(
+                `Nakama client created - ${
+                    useSSL ? "https" : "http"
+                }://${host}:${port}`
+            );
 
             // Use sessionStorage instead of localStorage to create unique users per tab/window
             let deviceId = sessionStorage.getItem("deviceId");
@@ -53,10 +57,10 @@ class Nakama {
     async authenticateEmail(email, password, username = null) {
         console.log("Authenticating email:", email, "username:", username);
 
-        const { host, port, key } = nakamaConfig;
+        const { host, port, key, useSSL } = nakamaConfig;
 
         this.client = new Client(key, host, port);
-        this.client.ssl = false;
+        this.client.ssl = useSSL;
 
         try {
             if (username) {
@@ -142,7 +146,9 @@ class Nakama {
         }
 
         console.log("Successfully joined match, our presence:", match.self);
-        return this.matchID; // Return matchID for validation
+        
+        // Return both matchID and the match object (which contains initial state)
+        return { matchID: this.matchID, match: match };
     }
 
     async makeMove(index) {

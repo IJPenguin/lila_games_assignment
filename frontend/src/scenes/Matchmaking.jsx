@@ -136,15 +136,15 @@ class Matchmaking extends Phaser.Scene {
                         );
                     }
 
-                    const matchID = await Nakama.findMatch(
+                    const result = await Nakama.findMatch(
                         this.playWithAI,
                         false
                     );
-                    console.log("AI match found:", matchID);
+                    console.log("AI match found:", result.matchID);
                     loadingText.setText("Match found! Starting game...");
 
                     await new Promise((resolve) => setTimeout(resolve, 100));
-                    this.scene.start("Game", { matchID: matchID });
+                    this.scene.start("Game", { matchID: result.matchID });
                     return;
                 } catch (error) {
                     console.error(`AI match attempt ${attempt} failed:`, error);
@@ -165,12 +165,12 @@ class Matchmaking extends Phaser.Scene {
                 loadingText.setText("Waiting for opponent...");
                 console.log("Classic mode: Searching for opponent...");
 
-                const matchID = await Nakama.findMatch(this.playWithAI, false);
-                console.log("Match found with opponent:", matchID);
+                const result = await Nakama.findMatch(this.playWithAI, false);
+                console.log("Match found with opponent:", result.matchID);
                 loadingText.setText("Opponent found! Starting game...");
 
                 await new Promise((resolve) => setTimeout(resolve, 100));
-                this.scene.start("Game", { matchID: matchID });
+                this.scene.start("Game", { matchID: result.matchID });
             } catch (error) {
                 console.error("Classic matchmaking failed:", error);
                 loadingText.setText("Connection error. Please try again.");

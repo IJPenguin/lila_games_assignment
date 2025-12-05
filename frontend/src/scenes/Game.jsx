@@ -330,13 +330,7 @@ class Game extends Phaser.Scene {
                 switch (result.op_code) {
                     case 1:
                         console.log("Case 1 - Game Start");
-                        this.gameStarted = true;
-                        // Cancel the start timeout since game has started
-                        if (this.startTimeout) {
-                            this.startTimeout.remove();
-                            this.startTimeout = null;
-                        }
-                        this.setPlayerTurn(result.data);
+                        this.handleGameStart(result.data);
                         break;
                     case 2:
                         console.log("Case 2 - Move Update");
@@ -371,9 +365,21 @@ class Game extends Phaser.Scene {
         Nakama.socket.onmatchdata = this.matchDataHandler;
     }
 
-    create() {
+    handleGameStart(data) {
+        console.log("Handling game start");
+        this.gameStarted = true;
+        // Cancel the start timeout since game has started
+        if (this.startTimeout) {
+            this.startTimeout.remove();
+            this.startTimeout = null;
+        }
+        this.setPlayerTurn(data);
+    }
 
+    create() {
+        // Set up the listener FIRST before any UI, to catch early messages
         this.nakamaListener();
+        console.log("Match data listener set up for match:", this.matchID);
 
         const centerX = this.cameras.main.width / 2;
         const centerY = this.cameras.main.height / 2;
@@ -387,12 +393,15 @@ class Game extends Phaser.Scene {
             })
             .setOrigin(0.5);
 
-        this.startTimeout = this.time.delayedCall(10000, () => {
+        // Increased timeout to 15 seconds to account for matchmaking delays
+        this.startTimeout = this.time.delayedCall(15000, () => {
             if (!this.gameStarted) {
-                console.error("Timeout waiting for game to start - likely failed to join match");
+                console.error(
+                    "Timeout waiting for game to start - likely failed to join match"
+                );
                 this.headerText.setText("Failed to join match");
                 this.headerText.setColor("#c83e4d");
-                
+
                 // Return to matchmaking after a delay
                 this.time.delayedCall(2000, () => {
                     Nakama.cleanupMatch();
