@@ -1,52 +1,42 @@
-import { useEffect, useRef } from "react";
-import Login from "./scenes/Login";
-import ProfileSetup from "./scenes/ProfileSetup";
-import Game from "./scenes/Game";
-import Mainmenu from "./scenes/Mainmenu";
-import Selection from "./scenes/Selection";
-import Matchmaking from "./scenes/Matchmaking";
-import Profile from "./scenes/Profile";
+import { useState } from "react";
+import Login from "./components/Login";
+import Mainmenu from "./components/Mainmenu";
+import Selection from "./components/Selection";
+import Matchmaking from "./components/Matchmaking";
+import Game from "./components/Game";
+import Profile from "./components/Profile";
 
 function App() {
-    const gameContainerRef = useRef(null);
-    const gameRef = useRef(null);
+    const [currentScene, setCurrentScene] = useState("Login");
+    const [sceneData, setSceneData] = useState({});
 
-    useEffect(() => {
-        const config = {
-            type: Phaser.AUTO,
-            width: window.innerWidth,
-            height: window.innerHeight,
-            parent: gameContainerRef.current,
-            backgroundColor: "#32373B",
-            scale: {
-                mode: Phaser.Scale.RESIZE,
-                autoCenter: Phaser.Scale.CENTER_BOTH,
-            },
-            render: {
-                antialias: true,
-                roundPixels: true,
-            },
-            scene: [
-                Login,
-                ProfileSetup,
-                Mainmenu,
-                Selection,
-                Matchmaking,
-                Game,
-                Profile,
-            ],
-        };
-        gameRef.current = new Phaser.Game(config);
-        return () => {
-            if (gameRef.current) {
-                gameRef.current.destroy(true);
-            }
-        };
-    }, []);
+    const navigateTo = (scene, data = {}) => {
+        setSceneData(data);
+        setCurrentScene(scene);
+    };
+
+    const renderScene = () => {
+        switch (currentScene) {
+            case "Login":
+                return <Login navigateTo={navigateTo} />;
+            case "Mainmenu":
+                return <Mainmenu navigateTo={navigateTo} />;
+            case "Selection":
+                return <Selection navigateTo={navigateTo} />;
+            case "Matchmaking":
+                return <Matchmaking navigateTo={navigateTo} data={sceneData} />;
+            case "Game":
+                return <Game navigateTo={navigateTo} data={sceneData} />;
+            case "Profile":
+                return <Profile navigateTo={navigateTo} />;
+            default:
+                return <Login navigateTo={navigateTo} />;
+        }
+    };
 
     return (
-        <div className=" flex items-center justify-center w-screen h-screen overflow-hidden">
-            <div ref={gameContainerRef} id="game-container"></div>
+        <div className="w-screen h-screen bg-[#32373B] overflow-hidden">
+            {renderScene()}
         </div>
     );
 }

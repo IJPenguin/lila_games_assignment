@@ -125,6 +125,18 @@ class Nakama {
         this.matchID = matches.payload.matchIds[0];
         this.currentMatchID = this.matchID; // Set active match context
 
+        // IMPORTANT: Set up a temporary listener to catch early messages
+        // This prevents race condition where START arrives before Game component mounts
+        const earlyMessages = [];
+        const tempListener = (data) => {
+            console.log(
+                "📨 Early message captured (before Game component):",
+                data.op_code
+            );
+            earlyMessages.push(data);
+        };
+        this.socket.onmatchdata = tempListener;
+
         // Join the match and wait for confirmation
         console.log("[DEBUG] Attempting to join match:", this.matchID);
         const match = await this.socket.joinMatch(this.matchID);
@@ -146,9 +158,14 @@ class Nakama {
         }
 
         console.log("Successfully joined match, our presence:", match.self);
-        
-        // Return both matchID and the match object (which contains initial state)
-        return { matchID: this.matchID, match: match };
+        console.log("Early messages captured:", earlyMessages.length);
+
+        // Return matchID, match object, and any early messages
+        return {
+            matchID: this.matchID,
+            match: match,
+            earlyMessages: earlyMessages,
+        };
     }
 
     async makeMove(index) {
