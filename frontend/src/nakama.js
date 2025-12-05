@@ -44,7 +44,7 @@ class Nakama {
 
             const trace = false;
             console.log("Creating socket...");
-            this.socket = this.client.createSocket(false, trace);
+            this.socket = this.client.createSocket(true, trace);
             console.log("Socket created, connecting...");
             await this.socket.connect(this.session);
             console.log("Socket connected successfully");
@@ -92,7 +92,7 @@ class Nakama {
         sessionStorage.setItem("auth_type", "email");
 
         const trace = false;
-        this.socket = this.client.createSocket(false, trace);
+        this.socket = this.client.createSocket(true, trace);
         await this.socket.connect(this.session);
         console.log("Socket connected for email auth");
     }
