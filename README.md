@@ -7,7 +7,7 @@
 1. **Clone the repository:**
    ```bash
    git clone <repository-url>
-   cd lila_games_assignment
+   cd multiplayer_tic_tac_toe
    ```
 
 2. **Navigate to backend directory:**
@@ -190,7 +190,7 @@ INVITE_AI = 7      // Request AI opponent
      ./backend/ ubuntu@your-ec2-ip:~/backend/
 
      # OR Git Clone Repo
-     git clone https://github.com/IJPenguin/lila_games_assignment
+     git clone https://github.com/IJPenguin/multiplayer_tic_tac_toe
    ```
 
 5. **Build and start services on EC2:**
@@ -230,7 +230,7 @@ INVITE_AI = 7      // Request AI opponent
      dist/ ubuntu@your-ec2-ip:/var/www/html/
 
      # or git clone 
-     git clone https://github.com/IJPenguin/lila_games_assignment
+     git clone https://github.com/IJPenguin/multiplayer_tic_tac_toe
    ```
 
 4. **Configure Nginx:**
@@ -244,7 +244,7 @@ INVITE_AI = 7      // Request AI opponent
         listen 80;
         server_name _;
 
-        root /home/ubuntu/lila_games_assignment/frontend/dist;
+        root /home/ubuntu/multiplayer_tic_tac_toe/frontend/dist;
         index index.html;
 
         location / {
